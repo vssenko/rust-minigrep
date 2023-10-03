@@ -1,7 +1,7 @@
 use crate::config::Config;
 use std::collections::HashMap;
 
-static TRIMMED_SPACE_ADD: usize = 10;
+static DEFAULT_TRIMMED_SPACE: usize = 10;
 
 // I am sorry for all these clones.
 
@@ -20,16 +20,22 @@ pub fn search_content(content: &str, q: &str) -> Vec<String> {
         .map(|l| l.clone())
         .collect();
 
-    if Config::load().options.trim {
+    let config = Config::load();
+
+    if config.options.trim {
         let query_len = q.chars().count();
-        let part_len = query_len + TRIMMED_SPACE_ADD;
+        let trimmed_space = config
+            .options
+            .trim_size
+            .unwrap_or_else(|| DEFAULT_TRIMMED_SPACE);
+        let part_len = query_len + trimmed_space;
         let trimmed: Vec<String> = contained_lines
             .iter()
             .map(|l| {
                 let line_len: usize = l.chars().count();
                 if line_len > part_len {
                     let ind = _find_char_ind(l, q).unwrap();
-                    let offset = TRIMMED_SPACE_ADD / 2;
+                    let offset = trimmed_space / 2;
                     let start: usize = if (ind as i32) - (offset as i32) < 0 {
                         0
                     } else {
